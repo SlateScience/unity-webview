@@ -148,6 +148,7 @@ public class WebViewObject : MonoBehaviour
     
     void Awake()
     {
+        Debug.LogWarning("aninir is here!");
         alertDialogEnabled = true;
         scrollBounceEnabled = true;
         mMarginLeftComputed = -9999;
