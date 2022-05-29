@@ -1035,7 +1035,7 @@ public class CWebViewPlugin extends Fragment {
             return;
         }
         a.runOnUiThread(new Runnable() {public void run() {
-            if (mWebView == null) {
+            if (mWebView == null || layout == null) {
                 return;
             }
             if (visibility) {
