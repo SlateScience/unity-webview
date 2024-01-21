@@ -18,4 +18,8 @@ public class CUnityPlayer
         }
         super.addView(child);
     }
+
+    public void hidePreservedContent() {
+        return;
+    }
 }
