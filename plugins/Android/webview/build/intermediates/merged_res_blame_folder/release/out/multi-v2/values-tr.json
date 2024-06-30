@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "/Users/lavikabel/Dev/Slateunity-webview/plugins/Android/webview/build/intermediates/res/merged/release/values-tr/values-tr.xml",
+            "outputFile": "/Users/nir/unity-webview-GREE/plugins/Android/webview/build/intermediates/res/merged/release/values-tr/values-tr.xml",
             "map": [
                 {
-                    "source": "/Users/lavikabel/.gradle/caches/transforms-3/2817dc2db5f4e645bc179c10a09d5c70/transformed/core-1.6.0/res/values-tr/values-tr.xml",
+                    "source": "/Users/nir/.gradle/caches/transforms-3/2817dc2db5f4e645bc179c10a09d5c70/transformed/core-1.6.0/res/values-tr/values-tr.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -16,10 +16,10 @@
             ]
         },
         {
-            "outputFile": "/Users/lavikabel/Dev/Slateunity-webview/plugins/Android/webview/build/intermediates/incremental/mergeReleaseResources/merged.dir/values-tr/values-tr.xml",
+            "outputFile": "/Users/nir/unity-webview-GREE/plugins/Android/webview/build/intermediates/incremental/mergeReleaseResources/merged.dir/values-tr/values-tr.xml",
             "map": [
                 {
-                    "source": "/Users/lavikabel/.gradle/caches/transforms-3/2817dc2db5f4e645bc179c10a09d5c70/transformed/core-1.6.0/res/values-tr/values-tr.xml",
+                    "source": "/Users/nir/.gradle/caches/transforms-3/2817dc2db5f4e645bc179c10a09d5c70/transformed/core-1.6.0/res/values-tr/values-tr.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

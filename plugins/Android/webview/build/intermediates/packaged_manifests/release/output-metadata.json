@@ -4,7 +4,7 @@
     "type": "PACKAGED_MANIFESTS",
     "kind": "Directory"
   },
-  "applicationId": "com.slatescience.matific",
+  "applicationId": "net.gree.unitywebview",
   "variantName": "release",
   "elements": [
     {
