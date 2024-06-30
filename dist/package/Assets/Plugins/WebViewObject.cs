@@ -407,7 +407,7 @@ public class WebViewObject : MonoBehaviour
     public static bool IsWebViewAvailable()
     {
 #if !UNITY_EDITOR && UNITY_ANDROID
-        return (new AndroidJavaObject("net.gree.unitywebview.CWebViewPlugin")).CallStatic<bool>("IsWebViewAvailable");
+        return (new AndroidJavaObject("com.slatescience.matific.CWebViewPlugin")).CallStatic<bool>("IsWebViewAvailable");
 #else
         return true;
 #endif
@@ -498,7 +498,7 @@ public class WebViewObject : MonoBehaviour
 #elif UNITY_IPHONE
         webView = _CWebViewPlugin_Init(name, transparent, zoom, ua, enableWKWebView, wkContentMode, wkAllowsLinkPreview, wkAllowsBackForwardNavigationGestures, radius);
 #elif UNITY_ANDROID
-        webView = new AndroidJavaObject("net.gree.unitywebview.CWebViewPlugin");
+        webView = new AndroidJavaObject("com.slatescience.matific.CWebViewPlugin");
         webView.Call("Init", name, transparent, zoom, androidForceDarkMode, ua, radius);
 
         using(AndroidJavaClass UnityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))

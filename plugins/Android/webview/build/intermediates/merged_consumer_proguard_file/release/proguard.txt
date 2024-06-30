@@ -1,3 +1,3 @@
--keep class net.gree.unitywebview.** {
+-keep class com.slatescience.matific.** {
     *;
 }
