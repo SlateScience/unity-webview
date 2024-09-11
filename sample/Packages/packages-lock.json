@@ -26,11 +26,11 @@
       }
     },
     "net.gree.unity-webview": {
-      "version": "https://github.com/gree/unity-webview.git?path=/dist/package",
+      "version": "https://github.com/SlateScience/unity-webview.git?path=/dist/package#815ef2733f7ab8180d00469e6e416bdeeb0061d2",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "09f19253c12e6e817ae492fb1ea2c2f1f53964a0"
+      "hash": "815ef2733f7ab8180d00469e6e416bdeeb0061d2"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

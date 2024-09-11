@@ -2,7 +2,7 @@
   "dependencies": {
     "com.unity.ide.rider": "3.0.31",
     "com.unity.ugui": "1.0.0",
-    "net.gree.unity-webview": "https://github.com/gree/unity-webview.git?path=/dist/package",
+    "net.gree.unity-webview": "https://github.com/SlateScience/unity-webview.git?path=/dist/package#815ef2733f7ab8180d00469e6e416bdeeb0061d2",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
