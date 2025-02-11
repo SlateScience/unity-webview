@@ -263,13 +263,9 @@ window.Unity = { \
     webView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     webView.hidden = YES;
 
-    NSMutableArray<UIAccessibilityElement *> *accessibilityElements = view.accessibilityElements ?
-        [view.accessibilityElements mutableCopy] : [NSMutableArray array];
+    [view addSubview:webView];
 
-    [accessibilityElements addObject: (UIAccessibilityElement *)webView]; // adds the WebView at the end of the accessibility hierarchy
-
-    view.accessibilityElements = accessibilityElements;
-
+    view.accessibilityElements = @[webView]; // workaround
 
     return self;
 }
