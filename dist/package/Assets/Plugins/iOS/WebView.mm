@@ -289,6 +289,7 @@ window.Unity = { \
         [webView0 removeFromSuperview];
         [webView0 removeObserver:self forKeyPath:@"loading"];
         
+        UIView *view = UnityGetGLViewController().view;
         NSMutableArray<UIAccessibilityElement *> *accessibilityElements = view.accessibilityElements ?
         [view.accessibilityElements mutableCopy] : [NSMutableArray array];
 
