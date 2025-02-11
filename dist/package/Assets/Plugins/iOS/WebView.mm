@@ -263,9 +263,13 @@ window.Unity = { \
     webView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     webView.hidden = YES;
 
-    [webView addObserver:self forKeyPath: @"loading" options: NSKeyValueObservingOptionNew context:nil];
+    NSMutableArray<UIAccessibilityElement *> *accessibilityElements = view.accessibilityElements ?
+        [view.accessibilityElements mutableCopy] : [NSMutableArray array];
 
-    [view addSubview:webView];
+    [accessibilityElements addObject: (UIAccessibilityElement *)webView]; // adds the WebView at the end of the accessibility hierarchy
+
+    view.accessibilityElements = accessibilityElements;
+
 
     return self;
 }
@@ -284,6 +288,13 @@ window.Unity = { \
         [webView0 stopLoading];
         [webView0 removeFromSuperview];
         [webView0 removeObserver:self forKeyPath:@"loading"];
+        
+        NSMutableArray<UIAccessibilityElement *> *accessibilityElements = view.accessibilityElements ?
+        [view.accessibilityElements mutableCopy] : [NSMutableArray array];
+
+        [accessibilityElements removeObject: (UIAccessibilityElement *)webView];
+
+        view.accessibilityElements = accessibilityElements;
     }
     basicAuthPassword = nil;
     basicAuthUserName = nil;
