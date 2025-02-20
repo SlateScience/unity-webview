@@ -592,6 +592,8 @@ public class WebViewObject : MonoBehaviour
     [DllImport("__Internal")]
     private static extern void _CWebViewPlugin_ClearCache(IntPtr instance, bool includeDiskFiles);
     [DllImport("__Internal")]
+    private static extern void _gree_unity_webview_postMessage(string name, string msg);
+    [DllImport("__Internal")]
     private static extern void _CWebViewPlugin_SetSuspended(IntPtr instance, bool suspended);
 #elif UNITY_WEBGL
     [DllImport("__Internal")]
@@ -1148,7 +1150,7 @@ public class WebViewObject : MonoBehaviour
     {
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
-        _gree_unity_webview_evaluateJS(name, js);
+        _gree_unity_webview_postMessage(name, js);
 #endif
 #elif UNITY_WEBPLAYER
         Application.ExternalCall("unityWebView.evaluateJS", name, js);
