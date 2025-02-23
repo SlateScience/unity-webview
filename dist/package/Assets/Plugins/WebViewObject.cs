@@ -1184,12 +1184,12 @@ public void PostMessage(string msg)
         if (webView == IntPtr.Zero)
             return;
 //TODO: decalre/implement _CWebViewPlugin_PostMessage
-        _CWebViewPlugin_EvaluateJS(webView, js);
+        _CWebViewPlugin_EvaluateJS(webView, msg);
 #elif UNITY_ANDROID
-//TODO: Implemenate EvaluateJS for android
+//TODO: Implement EvaluateJS for android
         if (webView == null)
             return;
-        webView.Call("EvaluateJS", js);
+        webView.Call("EvaluateJS", msg);
 #endif
     }
 
