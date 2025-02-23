@@ -1150,7 +1150,7 @@ public class WebViewObject : MonoBehaviour
     {
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
-        _gree_unity_webview_postMessage(name, js);
+        _gree_unity_webview_evaluateJS(name, js);
 #endif
 #elif UNITY_WEBPLAYER
         Application.ExternalCall("unityWebView.evaluateJS", name, js);
@@ -1166,6 +1166,30 @@ public class WebViewObject : MonoBehaviour
         webView.Call("EvaluateJS", js);
 #endif
     }
+
+public void PostMessage(string msg)
+    {
+#if UNITY_WEBGL
+#if !UNITY_EDITOR
+        _gree_unity_webview_postMessage(name, msg);
+#endif
+#elif UNITY_WEBPLAYER
+        Application.ExternalCall("unityWebView.postMessage", name, msg);
+#elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
+        //TODO: UNSUPPORTED
+#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE
+        if (webView == IntPtr.Zero)
+            return;
+//TODO: decalre/implement _CWebViewPlugin_PostMessage
+        _CWebViewPlugin_EvaluateJS(webView, js);
+#elif UNITY_ANDROID
+//TODO: Implemenate EvaluateJS for android
+        if (webView == null)
+            return;
+        webView.Call("EvaluateJS", js);
+#endif
+    }
+
 
     public int Progress()
     {
