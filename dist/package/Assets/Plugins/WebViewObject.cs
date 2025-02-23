@@ -943,7 +943,7 @@ public class WebViewObject : MonoBehaviour
 #endif
         if (GetVisibility() && !v)
         {
-            Debug.LogError($"APPL-9540 trying to call EvaluateJS on platform {Application.platform}")
+            Debug.LogError($"APPL-9540 trying to call EvaluateJS on platform {Application.platform}");
             EvaluateJS("if (document && document.activeElement) document.activeElement.blur();");
         }
 #if UNITY_WEBGL
