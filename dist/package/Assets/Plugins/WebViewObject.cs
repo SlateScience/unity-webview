@@ -943,10 +943,12 @@ public class WebViewObject : MonoBehaviour
 #endif
         if (GetVisibility() && !v)
         {
+            Debug.LogError($"APPL-9540 trying to call EvaluateJS on platform {Application.platform}")
             EvaluateJS("if (document && document.activeElement) document.activeElement.blur();");
         }
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
+        Debug.Log($"APPL-9540 reached correct branch in SetVisibility {Application.platform}");
         _gree_unity_webview_setVisibility(name, v);
 #endif
 #elif UNITY_WEBPLAYER
