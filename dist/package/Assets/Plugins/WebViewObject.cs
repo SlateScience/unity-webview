@@ -1169,7 +1169,7 @@ public class WebViewObject : MonoBehaviour
 
 public void PostMessage(string msg)
     {
-#if !UNITY_WEBGL || !UNITY_WEBPLAYER
+#if !UNITY_WEBGL && !UNITY_WEBPLAYER
 		Debug.LogWarning($"PostMessage not supported on {Application.platform}. Using fallback EvaluateJS");
 #endif
 #if UNITY_WEBGL
