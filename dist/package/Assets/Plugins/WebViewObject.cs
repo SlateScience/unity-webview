@@ -605,6 +605,8 @@ public class WebViewObject : MonoBehaviour
     [DllImport("__Internal")]
     private static extern void _gree_unity_webview_evaluateJS(string name, string js);
     [DllImport("__Internal")]
+    private static extern void _gree_unity_webview_postMessage(string name, string msg);
+    [DllImport("__Internal")]
     private static extern void _gree_unity_webview_destroy(string name);
 #endif
 
@@ -939,10 +941,12 @@ public class WebViewObject : MonoBehaviour
             bg.gameObject.active = v;
         }
 #endif
+#if !UNITY_WEBGL
         if (GetVisibility() && !v)
         {
             EvaluateJS("if (document && document.activeElement) document.activeElement.blur();");
         }
+#endif
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
         _gree_unity_webview_setVisibility(name, v);
@@ -1164,6 +1168,33 @@ public class WebViewObject : MonoBehaviour
         webView.Call("EvaluateJS", js);
 #endif
     }
+
+public void PostMessage(string msg)
+    {
+#if !UNITY_WEBGL && !UNITY_WEBPLAYER
+		Debug.LogWarning($"PostMessage not supported on {Application.platform}. Using fallback EvaluateJS");
+#endif
+#if UNITY_WEBGL
+#if !UNITY_EDITOR
+        _gree_unity_webview_postMessage(name, msg);
+#endif
+#elif UNITY_WEBPLAYER
+        Application.ExternalCall("unityWebView.postMessage", name, msg);
+#elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
+        //TODO: UNSUPPORTED
+#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE
+        if (webView == IntPtr.Zero)
+            return;
+//TODO: decalre/implement _CWebViewPlugin_PostMessage
+        _CWebViewPlugin_EvaluateJS(webView, msg);
+#elif UNITY_ANDROID
+//TODO: Implement EvaluateJS for android
+        if (webView == null)
+            return;
+        webView.Call("EvaluateJS", msg);
+#endif
+    }
+
 
     public int Progress()
     {
