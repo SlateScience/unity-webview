@@ -75,6 +75,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -188,6 +189,29 @@ public class CWebViewPlugin extends Fragment {
 
     private String mBasicAuthUserName;
     private String mBasicAuthPassword;
+
+    // cf. https://chromium.googlesource.com/chromium/src/+/3e5a94daf32200d65dea6072dd4d1b9a2025508b/components/external_intents/android/java/src/org/chromium/components/external_intents/ExternalNavigationHandler.java#121
+    private static final int ALLOWED_INTENT_FLAGS
+        = Intent.FLAG_EXCLUDE_STOPPED_PACKAGES
+        | Intent.FLAG_ACTIVITY_CLEAR_TOP
+        | Intent.FLAG_ACTIVITY_SINGLE_TOP
+        | Intent.FLAG_ACTIVITY_MATCH_EXTERNAL
+        | Intent.FLAG_ACTIVITY_NEW_TASK
+        | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+        | Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+        | Intent.FLAG_ACTIVITY_RETAIN_IN_RECENTS
+        | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT;
+
+    // cf. https://chromium.googlesource.com/chromium/src/+/3e5a94daf32200d65dea6072dd4d1b9a2025508b/components/external_intents/android/java/src/org/chromium/components/external_intents/ExternalNavigationHandler.java#1808
+    private static void sanitizeQueryIntentActivitiesIntent(Intent intent) {
+        intent.setFlags(intent.getFlags() & ALLOWED_INTENT_FLAGS);
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        intent.setComponent(null);
+
+        // Intent Selectors allow intents to bypass the intent filter and potentially send apps URIs
+        // they were not expecting to handle. https://crbug.com/1254422
+        intent.setSelector(null);
+    }
 
     public void SaveDataURL(final String fileName, final String dataURL) {
         if (!dataURL.startsWith("data:")) {
@@ -764,6 +788,18 @@ public class CWebViewPlugin extends Fragment {
                         mWebViewPlugin.call("CallOnStarted", url);
                         // Let webview handle the URL
                         return false;
+                    } else if (url.startsWith("intent://") || url.startsWith("android-app://")) {
+                        Intent intent = null;
+                        try {
+                            intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                            // cf. https://www.m3tech.blog/entry/android-webview-intent-scheme
+                            sanitizeQueryIntentActivitiesIntent(intent);
+                            view.getContext().startActivity(intent);
+                        } catch (URISyntaxException ex) {
+                        } catch (ActivityNotFoundException ex) {
+                            launchMarket(view.getContext(), intent);
+                        }
+                        return true;
                     }
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     // PackageManager pm = a.getPackageManager();
@@ -776,6 +812,27 @@ public class CWebViewPlugin extends Fragment {
                     } catch (ActivityNotFoundException ex) {
                     }
                     return true;
+                }
+
+                private void launchMarket(Context context, Intent intent) {
+                    if (intent == null) {
+                        return;
+                    }
+                    String packageName = intent.getPackage();
+                    if (packageName == null) {
+                        return;
+                    }
+                    // cf. https://stackoverflow.com/questions/11753000/how-to-open-the-google-play-store-directly-from-my-android-application/11753070#11753070
+                    try {
+                        intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
+                        context.startActivity(intent);
+                    } catch (android.content.ActivityNotFoundException ex) {
+                        try {
+                            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
+                            context.startActivity(intent);
+                        } catch (android.content.ActivityNotFoundException ex2) {
+                        }
+                    }
                 }
             });
             webView.addJavascriptInterface(mWebViewPlugin , "Unity");

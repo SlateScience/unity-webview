@@ -21,7 +21,7 @@ import com.unity3d.player.*;
 public class CUnityPlayerActivity extends Activity implements IUnityPlayerLifecycleEvents
 {
     public static CUnityPlayerActivity GlobalUnityActivity = null;
-    protected UnityPlayer mUnityPlayer; // don't change the name of this variable; referenced from native code
+    protected UnityPlayerForActivityOrService mUnityPlayer; // don't change the name of this variable; referenced from native code
 
     // Override this in your custom UnityPlayerActivity to tweak the command line arguments passed to the Unity Android Player
     // The command line arguments are passed as a string, separated by spaces
@@ -56,11 +56,11 @@ public class CUnityPlayerActivity extends Activity implements IUnityPlayerLifecy
         String cmdLine = updateUnityCommandLineArguments(getIntent().getStringExtra("unity"));
         getIntent().putExtra("unity", cmdLine);
 
-        mUnityPlayer = new UnityPlayer(this);
+        mUnityPlayer = new UnityPlayerForActivityOrService(this);
         CUnityPlayerActivity.GlobalUnityActivity = this;
 
-        setContentView(mUnityPlayer);
-        mUnityPlayer.requestFocus();
+        setContentView(mUnityPlayer.getFrameLayout());
+        mUnityPlayer.getFrameLayout().requestFocus();
     }
 
     // When Unity player unloaded move task to background
@@ -108,7 +108,7 @@ public class CUnityPlayerActivity extends Activity implements IUnityPlayerLifecy
     @Override public void onLowMemory()
     {
         super.onLowMemory();
-        mUnityPlayer.lowMemory();
+        mUnityPlayer.onTrimMemory(UnityPlayerForActivityOrService.MemoryUsage.Critical);
     }
 
     // Trim Memory Unity
@@ -117,7 +117,7 @@ public class CUnityPlayerActivity extends Activity implements IUnityPlayerLifecy
         super.onTrimMemory(level);
         if (level == TRIM_MEMORY_RUNNING_CRITICAL)
         {
-            mUnityPlayer.lowMemory();
+            mUnityPlayer.onTrimMemory(UnityPlayerForActivityOrService.MemoryUsage.Critical);
         }
     }
 
