@@ -18,14 +18,21 @@ net/gree/unitywebview/CWebViewPlugin.java
  net.gree.unitywebview.CWebViewPlugin$23
  net.gree.unitywebview.CWebViewPlugin$24
  net.gree.unitywebview.CWebViewPlugin$25
+ net.gree.unitywebview.CWebViewPlugin$26
+ net.gree.unitywebview.CWebViewPlugin$27
+ net.gree.unitywebview.CWebViewPlugin$28
+ net.gree.unitywebview.CWebViewPlugin$29
  net.gree.unitywebview.CWebViewPlugin$3
- net.gree.unitywebview.CWebViewPlugin$3$1
+ net.gree.unitywebview.CWebViewPlugin$30
+ net.gree.unitywebview.CWebViewPlugin$31
+ net.gree.unitywebview.CWebViewPlugin$32
  net.gree.unitywebview.CWebViewPlugin$4
  net.gree.unitywebview.CWebViewPlugin$4$1
- net.gree.unitywebview.CWebViewPlugin$4$2
- net.gree.unitywebview.CWebViewPlugin$4$2$1
- net.gree.unitywebview.CWebViewPlugin$4$3
  net.gree.unitywebview.CWebViewPlugin$5
+ net.gree.unitywebview.CWebViewPlugin$5$1
+ net.gree.unitywebview.CWebViewPlugin$5$2
+ net.gree.unitywebview.CWebViewPlugin$5$2$1
+ net.gree.unitywebview.CWebViewPlugin$5$3
  net.gree.unitywebview.CWebViewPlugin$6
  net.gree.unitywebview.CWebViewPlugin$7
  net.gree.unitywebview.CWebViewPlugin$8
@@ -33,6 +40,9 @@ net/gree/unitywebview/CWebViewPlugin.java
  net.gree.unitywebview.CWebViewPluginInterface
  net.gree.unitywebview.CWebViewPluginInterface$1
  net.gree.unitywebview.CWebViewPluginInterface$2
+ net.gree.unitywebview.CWebViewPluginInterface$3
+net/gree/unitywebview/RoundedWebView.java
+ net.gree.unitywebview.RoundedWebView
 net/gree/unitywebview/BuildConfig.java
  net.gree.unitywebview.BuildConfig
 net/gree/unitywebview/CUnityPlayerActivity.java
