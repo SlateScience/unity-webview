@@ -14,7 +14,7 @@ This is a custom unity webview fork to allow pausing and resuming unity while th
 2. Goto `plugins\Android` and open `install.sh`. (**Don't use `install-nofragment.sh`**)
 3. In the sh script update `UNITY` variable with your unity version (i.e. `UNITY="2020.3.30f1"`) This batch sets up the android project (copies files into src).
 There's no need to enter the full path - the script appends it.
-4. From the terminal, call `install.sh [--development]`
+4. From the terminal, call `install.sh` and then call `install.sh --development` flag so it will work for both release and development mode
    1. The script updates `webview/libs/classes.jar` with the relevant unity classes (i.e. `${UNITY}/PlaybackEngines/AndroidPlayer/Variations/${SCRIPTING_BACKEND}/${MODE}/Classes/classes.jar`)
    2. The script generates `WebViewPlugin-release.aar.tmpl` or `WebViewPlugin-development.aar.tmpl` and place it in `DEST_DIR` folder `../../build/Packager/Assets/Plugins/Android`
 5. If succeeded, 2 files (among others) would be generated - `WebViewPlugin-*.aar.tmpl` and `core-1.6.0.aar.tmpl` under `build/Packager/Assets/Plugins/Android`.
