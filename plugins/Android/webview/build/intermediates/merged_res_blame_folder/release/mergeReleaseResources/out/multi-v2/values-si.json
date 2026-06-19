@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "net.gree.unitywebview-mergeReleaseResources-3:/values-si/values-si.xml",
+            "map": [
+                {
+                    "source": "/Users/sahan/.gradle/caches/8.13/transforms/1cfa5dd447bf06cc34c6a931440f2ca5/transformed/core-1.6.0/res/values-si/values-si.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "100",
+                        "endOffsets": "151"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "net.gree.unitywebview-release-5:/values-si/values-si.xml",
+            "map": [
+                {
+                    "source": "/Users/sahan/.gradle/caches/8.13/transforms/1cfa5dd447bf06cc34c6a931440f2ca5/transformed/core-1.6.0/res/values-si/values-si.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "100",
+                        "endOffsets": "151"
+                    }
+                }
+            ]
+        }
+    ]
+}

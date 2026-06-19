@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "net.gree.unitywebview-release-5:/drawable/notification_bg_low.xml",
+        "source": "net.gree.unitywebview-core-1.6.0-1:/drawable/notification_bg_low.xml"
+    },
+    {
+        "merged": "net.gree.unitywebview-release-5:/drawable/notification_tile_bg.xml",
+        "source": "net.gree.unitywebview-core-1.6.0-1:/drawable/notification_tile_bg.xml"
+    },
+    {
+        "merged": "net.gree.unitywebview-release-5:/drawable/notification_bg.xml",
+        "source": "net.gree.unitywebview-core-1.6.0-1:/drawable/notification_bg.xml"
+    },
+    {
+        "merged": "net.gree.unitywebview-release-5:/drawable/notification_icon_background.xml",
+        "source": "net.gree.unitywebview-core-1.6.0-1:/drawable/notification_icon_background.xml"
+    }
+]

@@ -1,0 +1,9 @@
+net.gree.unitywebview-jetified-annotation-experimental-1.1.0-0 /Users/sahan/.gradle/caches/8.13/transforms/15a157fcec5154d6bca9dd54d3ad7b6c/transformed/jetified-annotation-experimental-1.1.0/res
+net.gree.unitywebview-core-1.6.0-1 /Users/sahan/.gradle/caches/8.13/transforms/1cfa5dd447bf06cc34c6a931440f2ca5/transformed/core-1.6.0/res
+net.gree.unitywebview-pngs-2 /Users/sahan/unity-webview/plugins/Android/webview/build/generated/res/pngs/release
+net.gree.unitywebview-resValues-3 /Users/sahan/unity-webview/plugins/Android/webview/build/generated/res/resValues/release
+net.gree.unitywebview-mergeReleaseResources-4 /Users/sahan/unity-webview/plugins/Android/webview/build/intermediates/incremental/release/mergeReleaseResources/merged.dir
+net.gree.unitywebview-mergeReleaseResources-5 /Users/sahan/unity-webview/plugins/Android/webview/build/intermediates/incremental/release/mergeReleaseResources/stripped.dir
+net.gree.unitywebview-release-6 /Users/sahan/unity-webview/plugins/Android/webview/build/intermediates/merged_res/release/mergeReleaseResources
+net.gree.unitywebview-main-7 /Users/sahan/unity-webview/plugins/Android/webview/src/main/res
+net.gree.unitywebview-release-8 /Users/sahan/unity-webview/plugins/Android/webview/src/release/res

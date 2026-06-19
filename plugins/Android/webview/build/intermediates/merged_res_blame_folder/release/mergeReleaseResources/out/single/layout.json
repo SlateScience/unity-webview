@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "net.gree.unitywebview-release-5:/layout/notification_template_part_time.xml",
+        "source": "net.gree.unitywebview-core-1.6.0-1:/layout/notification_template_part_time.xml"
+    },
+    {
+        "merged": "net.gree.unitywebview-release-5:/layout/notification_template_part_chronometer.xml",
+        "source": "net.gree.unitywebview-core-1.6.0-1:/layout/notification_template_part_chronometer.xml"
+    },
+    {
+        "merged": "net.gree.unitywebview-release-5:/layout/custom_dialog.xml",
+        "source": "net.gree.unitywebview-core-1.6.0-1:/layout/custom_dialog.xml"
+    }
+]
