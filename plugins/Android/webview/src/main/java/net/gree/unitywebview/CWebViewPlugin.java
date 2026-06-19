@@ -23,6 +23,7 @@ package net.gree.unitywebview;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.app.Fragment;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
@@ -108,6 +109,23 @@ class CWebViewPluginInterface {
         call("CallFromJS", message);
     }
 
+    //MATIFIC SPECIFIC
+    @JavascriptInterface
+    public void android_unityPause() {
+        mPlugin.PauseUnityInternal();
+    }
+
+    @JavascriptInterface
+    public void android_unityResume() {
+        final Activity a = UnityPlayer.currentActivity;
+        a.runOnUiThread(new Runnable() {public void run() {
+            CUnityPlayerActivity.GlobalUnityActivity.ResumeUnityPlayer();
+        };
+        });
+    }
+
+//END MATIFIC SPECIFIC
+
     public void call(final String method, final String message) {
         final Activity a = UnityPlayer.currentActivity;
         if (CWebViewPlugin.isDestroyed(a)) {
@@ -166,6 +184,9 @@ public class CWebViewPlugin extends Fragment {
     private static long instanceCount;
     private long mInstanceId;
     private boolean mPaused;
+    //MATIFIC SPECIFIC
+    public boolean mIsPauseDueToUnityPauseCall = false;
+    //END MATIFIC SPECIFIC
     private List<Pair<String, CWebViewPlugin>> mTransactions;
 
     private String mBasicAuthUserName;
@@ -422,6 +443,33 @@ public class CWebViewPlugin extends Fragment {
         return mWebView != null;
     }
 
+    //MATIFIC SPECIFIC
+    public void PauseUnityInternal() {
+        final Activity a = UnityPlayer.currentActivity;
+
+        Thread t = new Thread() {
+            public void run() {
+                try{
+                    Thread.sleep(1000);
+                    a.runOnUiThread(new Runnable() {
+                        public void run() {
+                            mIsPauseDueToUnityPauseCall  = true;
+                            CUnityPlayerActivity.GlobalUnityActivity.PauseUnityPlayer();
+                        }
+                    });
+                }
+                catch(Exception e){
+
+                }
+            }
+        };
+
+        t.start();
+    }
+    public void RequestPauseUnity() {
+        PauseUnityInternal();
+    }
+//END MATIFIC SPECIFIC
     public void Init(final String gameObject, final boolean transparent, final boolean zoom, final int androidForceDarkMode, final String ua, final int radius) {
         final CWebViewPlugin self = this;
         final Activity a = UnityPlayer.currentActivity;
@@ -1303,6 +1351,16 @@ public class CWebViewPlugin extends Fragment {
     // cf. https://stackoverflow.com/questions/31788748/webview-youtube-videos-playing-in-background-on-rotation-and-minimise/31789193#31789193
     public void OnApplicationPause(boolean paused) {
         mPaused = paused;
+        //MATIFIC SPECIFIC
+
+        //NOTE: When we call PauseUnity from webview it will trigger an onApplicationPause (true). We want to ignore it so webview continues
+        //to work while unity is paused
+        if(mIsPauseDueToUnityPauseCall) {
+            mPaused = false;
+            mIsPauseDueToUnityPauseCall = false;
+            return;
+        }
+//END MATIFIC SPECIFIC
         final Activity a = UnityPlayer.currentActivity;
         if (CWebViewPlugin.isDestroyed(a)) {
             return;
@@ -1468,6 +1526,8 @@ public class CWebViewPlugin extends Fragment {
     public void GetCookies(String url)
     {
         CookieManager cookieManager = CookieManager.getInstance();
+        Log.i("CWebViewPlugin", "APPL-8689 cookieManager is null? " + ((cookieManager == null)? "true" : "false"));
+        Log.i("CWebViewPlugin", cookieManager.toString());
         mWebViewPlugin.call("CallOnCookies", cookieManager.getCookie(url));
     }
 

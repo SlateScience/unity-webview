@@ -436,7 +436,16 @@ namespace Gree.UnityWebView
             mMarginRightComputed = -9999;
             mMarginBottomComputed = -9999;
         }
-    
+
+        //MATIFIC SPECIFIC
+        public void Android_RequestUnityPause()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            webView.Call("RequestPauseUnity");
+#endif
+        }
+        //END MATIFIC SPECIFIC
+
         public bool IsKeyboardVisible
         {
             get
@@ -1952,10 +1961,12 @@ namespace Gree.UnityWebView
                     var keyCode = (ushort)inputString[0];
                     inputString = inputString.Substring(1);
                     if (!string.IsNullOrEmpty(keyChars) || keyCode != 0) {
-                        Vector3 p;
-                        p.x = Input.mousePosition.x - rect.x;
-                        p.y = Input.mousePosition.y - rect.y;
-                        _CWebViewPlugin_SendKeyEvent(webView, (int)p.x, (int)p.y, keyChars, keyCode, 1);
+                        if (hasFocus) {
+                            Vector3 p;
+                            p.x = Input.mousePosition.x - rect.x;
+                            p.y = Input.mousePosition.y - rect.y;
+                            _CWebViewPlugin_SendKeyEvent(webView, (int)p.x, (int)p.y, keyChars, keyCode, 1);
+                        }
                     }
                 }
                 if (texture != null) {
@@ -2124,10 +2135,13 @@ namespace Gree.UnityWebView
                     inputString = inputString.Substring(1);
                     if (!string.IsNullOrEmpty(keyChars) || keyCode != 0)
                     {
-                        Vector3 p;
-                        p.x = Input.mousePosition.x - rect.x;
-                        p.y = Input.mousePosition.y - rect.y;
-                        _CWebViewPlugin_SendKeyEvent(webView, (int)p.x, (int)p.y, keyChars, keyCode, 1);
+                        if (hasFocus)
+                        {
+                            Vector3 p;
+                            p.x = Input.mousePosition.x - rect.x;
+                            p.y = Input.mousePosition.y - rect.y;
+                            _CWebViewPlugin_SendKeyEvent(webView, (int)p.x, (int)p.y, keyChars, keyCode, 1);
+                        }
                     }
                 }
                 if (texture != null)

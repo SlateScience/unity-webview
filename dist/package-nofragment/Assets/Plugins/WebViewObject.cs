@@ -1952,10 +1952,12 @@ namespace Gree.UnityWebView
                     var keyCode = (ushort)inputString[0];
                     inputString = inputString.Substring(1);
                     if (!string.IsNullOrEmpty(keyChars) || keyCode != 0) {
-                        Vector3 p;
-                        p.x = Input.mousePosition.x - rect.x;
-                        p.y = Input.mousePosition.y - rect.y;
-                        _CWebViewPlugin_SendKeyEvent(webView, (int)p.x, (int)p.y, keyChars, keyCode, 1);
+                        if (hasFocus) {
+                            Vector3 p;
+                            p.x = Input.mousePosition.x - rect.x;
+                            p.y = Input.mousePosition.y - rect.y;
+                            _CWebViewPlugin_SendKeyEvent(webView, (int)p.x, (int)p.y, keyChars, keyCode, 1);
+                        }
                     }
                 }
                 if (texture != null) {
@@ -2124,10 +2126,13 @@ namespace Gree.UnityWebView
                     inputString = inputString.Substring(1);
                     if (!string.IsNullOrEmpty(keyChars) || keyCode != 0)
                     {
-                        Vector3 p;
-                        p.x = Input.mousePosition.x - rect.x;
-                        p.y = Input.mousePosition.y - rect.y;
-                        _CWebViewPlugin_SendKeyEvent(webView, (int)p.x, (int)p.y, keyChars, keyCode, 1);
+                        if (hasFocus)
+                        {
+                            Vector3 p;
+                            p.x = Input.mousePosition.x - rect.x;
+                            p.y = Input.mousePosition.y - rect.y;
+                            _CWebViewPlugin_SendKeyEvent(webView, (int)p.x, (int)p.y, keyChars, keyCode, 1);
+                        }
                     }
                 }
                 if (texture != null)

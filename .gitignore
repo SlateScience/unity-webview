@@ -1,3 +1,4 @@
+.idea
 Library
 Temp
 *.csproj
@@ -31,3 +32,7 @@ plugins/Windows/WebViewPlugin/x64/
 
 # Downloaded tools
 plugins/Windows/nuget.exe
+
+# Android build artifacts
+/plugins/Android/gradle_build/build
+/plugins/Android/.gradle
