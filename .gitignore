@@ -28,6 +28,7 @@ plugins/Windows/WebViewPlugin/x64/
 
 # User-specific files
 *.user
+plugins/Android/local.properties
 *.vcxproj.user
 
 # Downloaded tools
