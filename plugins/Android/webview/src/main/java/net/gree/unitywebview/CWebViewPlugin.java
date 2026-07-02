@@ -26,6 +26,7 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.app.Fragment;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
 import android.content.ContentValues;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -75,6 +76,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -162,6 +164,7 @@ public class CWebViewPlugin extends Fragment {
     private boolean canGoBack;
     private boolean canGoForward;
     private boolean mInteractionEnabled = true;
+    private boolean mGoogleAppRedirectionEnabled;
     private boolean mAlertDialogEnabled;
     private boolean mAllowVideoCapture;
     private boolean mAllowAudioCapture;
@@ -188,6 +191,29 @@ public class CWebViewPlugin extends Fragment {
 
     private String mBasicAuthUserName;
     private String mBasicAuthPassword;
+
+    // cf. https://chromium.googlesource.com/chromium/src/+/3e5a94daf32200d65dea6072dd4d1b9a2025508b/components/external_intents/android/java/src/org/chromium/components/external_intents/ExternalNavigationHandler.java#121
+    private static final int ALLOWED_INTENT_FLAGS
+        = Intent.FLAG_EXCLUDE_STOPPED_PACKAGES
+        | Intent.FLAG_ACTIVITY_CLEAR_TOP
+        | Intent.FLAG_ACTIVITY_SINGLE_TOP
+        | Intent.FLAG_ACTIVITY_MATCH_EXTERNAL
+        | Intent.FLAG_ACTIVITY_NEW_TASK
+        | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+        | Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+        | Intent.FLAG_ACTIVITY_RETAIN_IN_RECENTS
+        | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT;
+
+    // cf. https://chromium.googlesource.com/chromium/src/+/3e5a94daf32200d65dea6072dd4d1b9a2025508b/components/external_intents/android/java/src/org/chromium/components/external_intents/ExternalNavigationHandler.java#1808
+    private static void sanitizeQueryIntentActivitiesIntent(Intent intent) {
+        intent.setFlags(intent.getFlags() & ALLOWED_INTENT_FLAGS);
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        intent.setComponent(null);
+
+        // Intent Selectors allow intents to bypass the intent filter and potentially send apps URIs
+        // they were not expecting to handle. https://crbug.com/1254422
+        intent.setSelector(null);
+    }
 
     public void SaveDataURL(final String fileName, final String dataURL) {
         if (!dataURL.startsWith("data:")) {
@@ -337,14 +363,22 @@ public class CWebViewPlugin extends Fragment {
                         results = new Uri[] { mCameraPhotoUri };
                     }
                 } else {
-                    String dataString = data.getDataString();
-                    // cf. https://www.petitmonte.com/java/android_webview_camera.html
-                    if (dataString == null) {
-                        if (mCameraPhotoUri != null) {
-                            results = new Uri[] { mCameraPhotoUri };
+                    ClipData clipData = data.getClipData();
+                    if (clipData != null) {
+                        results = new Uri[clipData.getItemCount()];
+                        for (int i = 0; i < clipData.getItemCount(); i++) {
+                            results[i] = clipData.getItemAt(i).getUri();
                         }
                     } else {
-                        results = new Uri[] { Uri.parse(dataString) };
+                        String dataString = data.getDataString();
+                        // cf. https://www.petitmonte.com/java/android_webview_camera.html
+                        if (dataString == null) {
+                            if (mCameraPhotoUri != null) {
+                                results = new Uri[] { mCameraPhotoUri };
+                            }
+                        } else {
+                            results = new Uri[] { Uri.parse(dataString) };
+                        }
                     }
                 }
             }
@@ -755,6 +789,11 @@ public class CWebViewPlugin extends Fragment {
                     } else if (mHookRegex != null && mHookRegex.matcher(url).find()) {
                         mWebViewPlugin.call("CallOnHooked", url);
                         return true;
+                    } else if (!mGoogleAppRedirectionEnabled && url.startsWith("https://www.google.com/")) {
+                        mWebView.loadUrl(url);
+                        return true;
+                    } else if (!mGoogleAppRedirectionEnabled && url.startsWith("intent://www.google.com/")) {
+                        return true;
                     } else if (!url.toLowerCase().endsWith(".pdf")
                                && !url.startsWith("https://maps.app.goo.gl")
                                && (url.startsWith("http://")
@@ -764,6 +803,18 @@ public class CWebViewPlugin extends Fragment {
                         mWebViewPlugin.call("CallOnStarted", url);
                         // Let webview handle the URL
                         return false;
+                    } else if (url.startsWith("intent://") || url.startsWith("android-app://")) {
+                        Intent intent = null;
+                        try {
+                            intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                            // cf. https://www.m3tech.blog/entry/android-webview-intent-scheme
+                            sanitizeQueryIntentActivitiesIntent(intent);
+                            view.getContext().startActivity(intent);
+                        } catch (URISyntaxException ex) {
+                        } catch (ActivityNotFoundException ex) {
+                            launchMarket(view.getContext(), intent);
+                        }
+                        return true;
                     }
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     // PackageManager pm = a.getPackageManager();
@@ -776,6 +827,27 @@ public class CWebViewPlugin extends Fragment {
                     } catch (ActivityNotFoundException ex) {
                     }
                     return true;
+                }
+
+                private void launchMarket(Context context, Intent intent) {
+                    if (intent == null) {
+                        return;
+                    }
+                    String packageName = intent.getPackage();
+                    if (packageName == null) {
+                        return;
+                    }
+                    // cf. https://stackoverflow.com/questions/11753000/how-to-open-the-google-play-store-directly-from-my-android-application/11753070#11753070
+                    try {
+                        intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
+                        context.startActivity(intent);
+                    } catch (android.content.ActivityNotFoundException ex) {
+                        try {
+                            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
+                            context.startActivity(intent);
+                        } catch (android.content.ActivityNotFoundException ex2) {
+                        }
+                    }
                 }
             });
             webView.addJavascriptInterface(mWebViewPlugin , "Unity");
@@ -914,28 +986,31 @@ public class CWebViewPlugin extends Fragment {
 
     private void ProcessChooser() {
         mCameraPhotoUri = null;
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-                Log.e("CWebViewPlugin", "Unable to create Image File", ex);
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                takePictureIntent.putExtra("PhotoPath", photoFile);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    mCameraPhotoUri = FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".unitywebview.fileprovider", photoFile);
-                } else {
-                    mCameraPhotoUri = Uri.parse("file:" + photoFile.getAbsolutePath());
+        Intent takePictureIntent = null;
+        if (mAllowVideoCapture) {
+            takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+                // Create the File where the photo should go
+                File photoFile = null;
+                try {
+                    photoFile = createImageFile();
+                } catch (IOException ex) {
+                    // Error occurred while creating the File
+                    //Log.e("CWebViewPlugin", "Unable to create Image File", ex);
                 }
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraPhotoUri);
-                //takePictureIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, "720000");
-            } else {
-                takePictureIntent = null;
+                // Continue only if the File was successfully created
+                if (photoFile != null) {
+                    takePictureIntent.putExtra("PhotoPath", photoFile);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        mCameraPhotoUri = FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".unitywebview.fileprovider", photoFile);
+                    } else {
+                        mCameraPhotoUri = Uri.parse("file:" + photoFile.getAbsolutePath());
+                    }
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraPhotoUri);
+                    //takePictureIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, "720000");
+                } else {
+                    takePictureIntent = null;
+                }
             }
         }
 
@@ -1179,6 +1254,16 @@ public class CWebViewPlugin extends Fragment {
         }});
     }
 
+    public void SetGoogleAppRedirectionEnabled(final boolean enabled) {
+        final Activity a = UnityPlayer.currentActivity;
+        if (CWebViewPlugin.isDestroyed(a)) {
+            return;
+        }
+        a.runOnUiThread(new Runnable() {public void run() {
+            mGoogleAppRedirectionEnabled = enabled;
+        }});
+    }
+
     public void SetScrollbarsVisibility(final boolean visibility) {
         final Activity a = UnityPlayer.currentActivity;
         if (CWebViewPlugin.isDestroyed(a)) {
@@ -1380,6 +1465,30 @@ public class CWebViewPlugin extends Fragment {
             }
             mCustomHeaders.clear();
         }});
+    }
+
+    public void ClearCookie(String url, String name)
+    {
+        try {
+            URL u = new URL(url);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                CookieManager cookieManager = CookieManager.getInstance();
+                String cookieString = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + u.getPath();
+                cookieManager.setCookie(url, cookieString);
+                cookieManager.flush();
+            } else {
+                final Activity a = UnityPlayer.currentActivity;
+                if (CWebViewPlugin.isDestroyed(a)) {
+                    return;
+                }
+                CookieSyncManager cookieSyncManager = CookieSyncManager.createInstance(a);
+                cookieSyncManager.startSync();
+                CookieManager cookieManager = CookieManager.getInstance();
+                String cookieString = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=" + u.getHost() + "; path=" + u.getPath();
+                cookieManager.setCookie(url, cookieString);
+            }
+        } catch (Exception e) {
+        }
     }
 
     public void ClearCookies()
