@@ -1,12 +1,10 @@
 apply plugin: 'com.android.library'
-
 android {
-    compileSdkVersion 30
-    buildToolsVersion "30.0.3"
-
+    namespace 'net.gree.unitywebview'
+    compileSdk 34
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 30
+        minSdk 16
+        targetSdk 34
         versionCode 1
         versionName "1.0"
         consumerProguardFiles "consumer-rules.pro"
@@ -18,7 +16,6 @@ android {
         }
     }
 }
-
 dependencies {
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 }
