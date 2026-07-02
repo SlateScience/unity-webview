@@ -92,14 +92,17 @@ case $MODE in
     cp -a $tmp/CWebViewPlugin.java ${TARGET}/src/main/java/net/gree/unitywebview/CWebViewPlugin.java
     ;;
 esac
-# remove CUnityPlayer*.java if UNITY != 5.6.1f1.
-case $UNITY in
-'5.6.1f1')
-    ;;
-*)
-    rm -f ${TARGET}/src/main/java/net/gree/unitywebview/CUnityPlayer*.java
-    ;;
-esac
+
+# MATIFIC SPECIFIC -- commented out this block because it is deleting our CUnityPlayerActivity class.
+## remove CUnityPlayer*.java if UNITY != 5.6.1f1.
+#case $UNITY in
+#'5.6.1f1')
+#    ;;
+#*)
+#    rm -f ${TARGET}/src/main/java/net/gree/unitywebview/CUnityPlayer*.java
+#    ;;
+#esac
+#END MATIFIC SPECIFIC
 
 pushd $CWD
 
