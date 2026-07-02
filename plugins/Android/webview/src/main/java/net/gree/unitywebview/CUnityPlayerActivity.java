@@ -1,48 +1,89 @@
 package net.gree.unitywebview;
-import com.unity3d.player.*;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
-// MATIFIC NOTE:
-// Extends UnityPlayerActivity (Unity 6 compatible) instead of the old approach of manually
-// implementing Activity + IUnityPlayerLifecycleEvents. Unity 6 changed UnityPlayer's constructor
-// API which caused NoSuchMethodError crashes on the old implementation.
-//
-// MATIFIC additions vs upstream:
-//   - GlobalUnityActivity: static ref so CWebViewPlugin can call pause/resume
-//   - mShouldPlayerPause / PauseUnityPlayer / ResumeUnityPlayer: let JS pause Unity while
-//     the webview episode is running
-//   - onResume override: re-pauses after super.onResume() if Unity was explicitly paused,
-//     because UnityPlayerActivity.onResume() unconditionally calls mUnityPlayer.resume()
-public class CUnityPlayerActivity extends UnityPlayerActivity
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.Window;
+import com.unity3d.player.*;
+
+//Matific NOTE:
+//This is the Activity as exported from Unity as an Android project
+//+ Expose PauseUnityPlayer/ResumeUnityPlayer + some logic
+
+
+public class CUnityPlayerActivity extends Activity implements IUnityPlayerLifecycleEvents
 {
     public static CUnityPlayerActivity GlobalUnityActivity = null;
+    protected CUnityPlayer mUnityPlayer;
     private boolean mShouldPlayerPause = false;
-    
+
     public void PauseUnityPlayer() {
         mShouldPlayerPause = true;
         mUnityPlayer.pause();
     }
-    
+
     public void ResumeUnityPlayer() {
         mShouldPlayerPause = false;
         mUnityPlayer.resume();
     }
-    
+
+    @Override public void onUnityPlayerUnloaded() { moveTaskToBack(true); }
+    @Override public void onUnityPlayerQuitted() {}
+
     @Override
-    public void onCreate(Bundle bundle) {
-        requestWindowFeature(1);
-        super.onCreate(bundle);
+    protected void onCreate(Bundle savedInstanceState) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        super.onCreate(savedInstanceState);
         getWindow().setFormat(2);
-        mUnityPlayer = new CUnityPlayer(this);
-        setContentView(mUnityPlayer);
-        mUnityPlayer.requestFocus();
+        mUnityPlayer = new CUnityPlayer(this, this);
         CUnityPlayerActivity.GlobalUnityActivity = this;
+        setContentView(mUnityPlayer.getView());
+        mUnityPlayer.getView().requestFocus();
     }
-    
-    @Override
-    protected void onResume() {
-        super.onResume(); // UnityPlayerActivity.onResume() calls mUnityPlayer.resume()
-        if (mShouldPlayerPause) {
-            mUnityPlayer.pause(); // re-pause if we were explicitly paused from JS
+
+    @Override protected void onNewIntent(Intent intent) {
+        setIntent(intent);
+        mUnityPlayer.newIntent(intent);
+    }
+
+    @Override protected void onDestroy() {
+        mUnityPlayer.destroy();
+        super.onDestroy();
+    }
+
+    @Override protected void onPause() {
+        super.onPause();
+        mUnityPlayer.pause();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        if (!mShouldPlayerPause) {
+            mUnityPlayer.resume();
         }
     }
+
+    @Override public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mUnityPlayer.configurationChanged(newConfig);
+    }
+
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        mUnityPlayer.windowFocusChanged(hasFocus);
+    }
+
+    @Override public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_MULTIPLE)
+            return mUnityPlayer.injectEvent(event);
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override public boolean onKeyUp(int keyCode, KeyEvent event)    { return mUnityPlayer.injectEvent(event); }
+    @Override public boolean onKeyDown(int keyCode, KeyEvent event)  { return mUnityPlayer.injectEvent(event); }
+    @Override public boolean onTouchEvent(MotionEvent event)         { return mUnityPlayer.injectEvent(event); }
+    public boolean onGenericMotionEvent(MotionEvent event)           { return mUnityPlayer.injectEvent(event); }
 }

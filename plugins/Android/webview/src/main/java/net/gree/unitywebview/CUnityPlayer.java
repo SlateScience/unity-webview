@@ -1,21 +1,10 @@
 package net.gree.unitywebview;
-
 import com.unity3d.player.*;
-import android.content.ContextWrapper;
-import android.view.SurfaceView;
-import android.view.View;
+import android.content.Context;
 
-public class CUnityPlayer
-    extends UnityPlayer
+public class CUnityPlayer extends UnityPlayerForActivityOrService
 {
-    public CUnityPlayer(ContextWrapper contextwrapper) {
-        super(contextwrapper);
-    }
-
-    public void addView(View child) {
-        if (child instanceof SurfaceView) {
-            ((SurfaceView)child).setZOrderOnTop(false);
-        }
-        super.addView(child);
+    public CUnityPlayer(Context context, IUnityPlayerLifecycleEvents lifecycleEvents) {
+        super(context, lifecycleEvents);
     }
 }
