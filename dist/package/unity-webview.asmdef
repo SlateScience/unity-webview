@@ -1,13 +1,16 @@
 {
     "name": "unity-webview",
-    "references": [],
-    "optionalUnityReferences": [],
+    "rootNamespace": "",
+    "references": [
+        "Unity.InputSystem"
+    ],
     "includePlatforms": [
         "Android",
         "Editor",
         "iOS",
         "macOSStandalone",
         "WebGL",
+        "WindowsStandalone32",
         "WindowsStandalone64"
     ],
     "excludePlatforms": [],
@@ -16,5 +19,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": []
+    "versionDefines": [
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "",
+            "define": "UNITYWEBVIEW_USE_INPUT_SYSTEM"
+        }
+    ],
+    "noEngineReferences": false
 }

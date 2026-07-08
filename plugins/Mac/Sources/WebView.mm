@@ -81,7 +81,6 @@ static BOOL s_useMetal;
     WKWebView *webView;
     NSString *gameObject;
     NSBitmapImageRep *bitmap;
-    NSBitmapImageRep *bitmaps[2];
     BOOL needsDisplay;
     NSMutableDictionary *customRequestHeader;
     NSMutableArray *messages;
@@ -196,15 +195,19 @@ static std::unordered_map<int, int> _nskey2cgkey{
     preferences.javaScriptEnabled = true;
     preferences.plugInsEnabled = true;
     [controller addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"unityControl"];
-    NSString *str = @"\
+    {
+        NSString *str = @"\
 window.Unity = { \
     call: function(msg) { \
         window.webkit.messageHandlers.unityControl.postMessage(msg); \
     } \
 }; \
 ";
+        WKUserScript *script = [[WKUserScript alloc] initWithSource:str injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+        [controller addUserScript:script];
+    }
     if (!zoom) {
-        str = [str stringByAppendingString:@"\
+        NSString *str = @"\
 (function() { \
     var meta = document.querySelector('meta[name=viewport]'); \
     if (meta == null) { \
@@ -215,12 +218,10 @@ window.Unity = { \
     var head = document.getElementsByTagName('head')[0]; \
     head.appendChild(meta); \
 })(); \
-"
-            ];
+";
+        WKUserScript *script = [[WKUserScript alloc] initWithSource:str injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:YES];
+        [controller addUserScript:script];
     }
-    WKUserScript *script
-        = [[WKUserScript alloc] initWithSource:str injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:YES];
-    [controller addUserScript:script];
     configuration.userContentController = controller;
     configuration.processPool = _sharedProcessPool;
     // configuration.preferences = preferences;
@@ -238,8 +239,6 @@ window.Unity = { \
     [webView setAutoresizingMask:(NSViewWidthSizable|NSViewHeightSizable)];
     // [webView setFrameLoadDelegate:(id)self];
     // [webView setPolicyDelegate:(id)self];
-    webView.UIDelegate = self;
-    webView.navigationDelegate = self;
     [webView addObserver:self forKeyPath: @"loading" options: NSKeyValueObservingOptionNew context:nil];
     gameObject = [NSString stringWithUTF8String:gameObject_];
     if (ua != NULL && strcmp(ua, "") != 0) {
@@ -283,8 +282,6 @@ window.Unity = { \
             [window close];
         }
         gameObject = nil;
-        bitmaps[1] = nil;
-        bitmaps[0] = nil;
         bitmap = nil;
         window = nil;
         windowController = nil;
@@ -306,6 +303,42 @@ window.Unity = { \
             webView.configuration.processPool = _sharedProcessPool;
         }
     }];
+}
+
++ (void)clearCookie:(const char *)name of:(const char *)url
+{
+    NSURL *nsurl = [NSURL URLWithString:[[NSString alloc] initWithUTF8String:url]];
+    if (nsurl == nil) {
+        return;
+    }
+    NSString *nsname = [NSString stringWithUTF8String:name];
+    if (@available(macOS 10.11, *)) {
+        WKHTTPCookieStore *cookieStore = WKWebsiteDataStore.defaultDataStore.httpCookieStore;
+        [cookieStore
+            getAllCookies:^(NSArray<NSHTTPCookie *> *array) {
+                [array
+                    enumerateObjectsUsingBlock:^(NSHTTPCookie *cookie, NSUInteger idx, BOOL *stop) {
+                        if ([cookie.name isEqualToString:nsname]
+                            && [cookie.domain isEqualToString:nsurl.host]
+                            && [cookie.path isEqualToString:nsurl.path]) {
+                            [cookieStore deleteCookie:cookie completionHandler:^{}];
+                        }
+                    }];
+            }];
+    } else {
+        NSHTTPCookieStorage *cookieStorage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
+        if (cookieStorage == nil) {
+            // cf. https://stackoverflow.com/questions/33876295/nshttpcookiestorage-sharedhttpcookiestorage-comes-up-empty-in-10-11
+            cookieStorage = [NSHTTPCookieStorage sharedCookieStorageForGroupContainerIdentifier:@"Cookies"];
+        }
+        [[cookieStorage cookies] enumerateObjectsUsingBlock:^(NSHTTPCookie *cookie, NSUInteger idx, BOOL *stop) {
+            if ([cookie.name isEqualToString:nsname]
+                && [cookie.domain isEqualToString:nsurl.host]
+                && [cookie.path isEqualToString:nsurl.path]) {
+                [cookieStorage deleteCookie:cookie];
+            }
+        }];
+    }
 }
 
 + (void)clearCookies
@@ -494,7 +527,7 @@ window.Unity = { \
       didReceiveScriptMessage:(WKScriptMessage *)message {
 
     // Log out the message received
-    NSLog(@"Received event %@", message.body);
+    //NSLog(@"Received event %@", message.body);
     [self addMessage:[NSString stringWithFormat:@"CallFromJS:%@",message.body]];
 
     /*
@@ -550,8 +583,6 @@ window.Unity = { \
     frame.origin.x = 0;
     frame.origin.y = 0;
     webView.frame = frame;
-    bitmaps[1] = nil;
-    bitmaps[0] = nil;
     bitmap = nil;
     if (window != nil) {
         frame.origin = window.frame.origin;
@@ -743,7 +774,7 @@ window.Unity = { \
             default:
                 break;
             }
-            {
+            if (deltaY != 0) {
                 CGEventRef cgEvent = CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitLine, 1, deltaY * 3, 0);
                 NSEvent *scrollEvent = [NSEvent eventWithCGEvent:cgEvent];
                 CFRelease(cgEvent);
@@ -834,52 +865,29 @@ window.Unity = { \
         // [webView cacheDisplayInRect:webView.frame toBitmapImageRep:bitmap];
         // bitmap = [webView bitmapImageRepForCachingDisplayInRect:webView.frame];
         NSRect rect = webView.frame;
-        if (bitmaps[0] == nil || bitmaps[1] == nil || devicePixelRatio0 != devicePixelRatio) {
-            webView.pageZoom = devicePixelRatio;
-            devicePixelRatio0 = devicePixelRatio;
-            for (int i = 0; i < 2; i++) {
-                bitmaps[i]
-                    = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:nil
-                                                              pixelsWide:(rect.size.width * devicePixelRatio)
-                                                              pixelsHigh:(rect.size.height * devicePixelRatio)
-                                                           bitsPerSample:8
-                                                         samplesPerPixel:4
-                                                                hasAlpha:YES
-                                                                isPlanar:NO
-                                                          colorSpaceName:NSCalibratedRGBColorSpace
-                                                            bitmapFormat:0
-                                                             bytesPerRow:(4 * rect.size.width * devicePixelRatio)
-                                                            bitsPerPixel:32];
-            }
-            bitmap = bitmaps[0];
-        }
-        NSBitmapImageRep *bitmap1 = (bitmap == bitmaps[0]) ? bitmaps[1] : bitmaps[0];
-        {
-            [self runBlock:^{
-                    WKSnapshotConfiguration *config = [WKSnapshotConfiguration new];
-                    config.rect = rect;
-                    config.snapshotWidth = @(rect.size.width * devicePixelRatio);
-                    [self->webView takeSnapshotWithConfiguration:config
-                                               completionHandler:^(NSImage *nsImg, NSError *err) {
-                            if (err == nil) {
-                                NSGraphicsContext *ctx = [NSGraphicsContext graphicsContextWithBitmapImageRep:bitmap1];
-                                [NSGraphicsContext saveGraphicsState];
-                                [NSGraphicsContext setCurrentContext:ctx];
-                                [nsImg drawAtPoint:CGPointZero
-                                          fromRect:CGRectMake(0, 0, [bitmap1 pixelsWide], [bitmap1 pixelsHigh])
-                                         operation:NSCompositingOperationCopy
-                                          fraction:1.0];
-                                [[NSGraphicsContext currentContext] flushGraphics];
-                                [NSGraphicsContext restoreGraphicsState];
+        [self runBlock:^{
+                WKSnapshotConfiguration *config = [WKSnapshotConfiguration new];
+                config.rect = rect;
+                config.snapshotWidth = @(rect.size.width * devicePixelRatio);
+                [self->webView takeSnapshotWithConfiguration:config
+                                           completionHandler:^(NSImage *nsImg, NSError *err) {
+                        NSBitmapImageRep *rep = nil;
+                        if (err == nil) {
+                            rep = (NSBitmapImageRep *)[nsImg bestRepresentationForRect:rect context:nil hints:nil];
+                            if (![rep isKindOfClass:[NSBitmapImageRep class]]) {
+                                CGImageRef cgImg = [nsImg CGImageForProposedRect:NULL context:nil hints:nil];
+                                rep = [[NSBitmapImageRep alloc] initWithCGImage:cgImg];
                             }
-                            @synchronized(self) {
-                                self->bitmap = bitmap1;
-                                self->needsDisplay = YES;
-                                self->inRendering = NO;
+                        }
+                        @synchronized(self) {
+                            if (rep) {
+                                self->bitmap = rep;
                             }
-                        }];
-                }];
-        }
+                            self->needsDisplay = YES;
+                            self->inRendering = NO;
+                        }
+                    }];
+            }];
     }
 }
 
@@ -907,31 +915,33 @@ window.Unity = { \
     }
 }
 
-- (void)render:(void *)textureBuffer
+- (BOOL)bitmapARGB
+{
+    @synchronized(self) {
+        return (bitmap == nil) ? false : (([bitmap bitmapFormat] & NSBitmapFormatAlphaFirst) ? true : false);
+    }
+}
+
+- (void *)render:(void *)textureBuffer
 {
     if (webView == nil)
-        return;
+        return nil;
     NSBitmapImageRep *bitmap0;
     @synchronized(self) {
         if (!needsDisplay)
-            return;
+            return nil;
         if (bitmap == nil)
-            return;
+            return nil;
         needsDisplay = NO;
         bitmap0 = bitmap;
     }
-    int w = (int)[bitmap0 pixelsWide];
-    int h = (int)[bitmap0 pixelsHigh];
-    //int p = (int)[bitmap0 samplesPerPixel];  // should be 4.
-    int r = (int)[bitmap0 bytesPerRow];
-    uint32_t *s0 = (uint32_t *)[bitmap0 bitmapData];
-    uint32_t *d0 = (uint32_t *)textureBuffer;
-    for (int y = 0; y < h; y++) {
-        uint32_t *s = (uint32_t *)((uint8_t *)s0 + y * r);
-        uint32_t *d = d0 + y * w;
-        for (int x = 0; x < w; x++) {
-            *d++ = *s++;
-        }
+    if (textureBuffer == nil) {
+        return (bitmap0 == nil) ? nil : (void *)[bitmap0 bitmapData];
+    } else {
+        unsigned char *data = [bitmap0 bitmapData];
+        long size = [bitmap0 pixelsHigh] * [bitmap0 bytesPerRow];
+        memcpy(textureBuffer, data, size);
+        return textureBuffer;
     }
 }
 
@@ -1000,11 +1010,13 @@ extern "C" {
     void _CWebViewPlugin_Update(void *instance, BOOL refreshBitmap, int devicePixelRatio);
     int _CWebViewPlugin_BitmapWidth(void *instance);
     int _CWebViewPlugin_BitmapHeight(void *instance);
-    void _CWebViewPlugin_Render(void *instance, void *textureBuffer);
+    BOOL _CWebViewPlugin_BitmapARGB(void *instance);
+    void *_CWebViewPlugin_Render(void *instance, void *textureBuffer);
     void _CWebViewPlugin_AddCustomHeader(void *instance, const char *headerKey, const char *headerValue);
     void _CWebViewPlugin_RemoveCustomHeader(void *instance, const char *headerKey);
     void _CWebViewPlugin_ClearCustomHeader(void *instance);
     const char *_CWebViewPlugin_GetCustomHeaderValue(void *instance, const char *headerKey);
+    void _CWebViewPlugin_ClearCookie(const char *url, const char *name);
     void _CWebViewPlugin_ClearCookies();
     void _CWebViewPlugin_SaveCookies();
     void _CWebViewPlugin_GetCookies(void *instance, const char *url);
@@ -1153,10 +1165,16 @@ int _CWebViewPlugin_BitmapHeight(void *instance)
     return [webViewPlugin bitmapHigh];
 }
 
-void _CWebViewPlugin_Render(void *instance, void *textureBuffer)
+BOOL _CWebViewPlugin_BitmapARGB(void *instance)
 {
     CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
-    [webViewPlugin render:textureBuffer];
+    return [webViewPlugin bitmapARGB];
+}
+
+void *_CWebViewPlugin_Render(void *instance, void *textureBuffer)
+{
+    CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
+    return [webViewPlugin render:textureBuffer];
 }
 
 void _CWebViewPlugin_AddCustomHeader(void *instance, const char *headerKey, const char *headerValue)
@@ -1181,6 +1199,11 @@ void _CWebViewPlugin_ClearCustomHeader(void *instance)
 {
     CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
     [webViewPlugin clearCustomRequestHeader];
+}
+
+void _CWebViewPlugin_ClearCookie(const char *url, const char *name)
+{
+    [CWebViewPlugin clearCookie:name of:url];
 }
 
 void _CWebViewPlugin_ClearCookies()
