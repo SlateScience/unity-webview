@@ -1133,10 +1133,12 @@ namespace Gree.UnityWebView
                 bg.gameObject.SetActive(v);
             }
 #endif
+#if !UNITY_WEBGL
             if (GetVisibility() && !v)
             {
                 EvaluateJS("if (document && document.activeElement) document.activeElement.blur();");
             }
+#endif
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
             _gree_unity_webview_setVisibility(name, v);
