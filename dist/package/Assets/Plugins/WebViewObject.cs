@@ -1134,6 +1134,9 @@ namespace Gree.UnityWebView
             }
 #endif
 #if !UNITY_WEBGL
+            // WebGL: EvaluateJS uses contentWindow.eval(), which CSP (no unsafe-eval) blocks and throws.
+            // Not needed there anyway: setVisibility(false) hides the iframe via display:none, and
+            // browsers auto-blur the focused element inside an element that becomes non-rendered.
             if (GetVisibility() && !v)
             {
                 EvaluateJS("if (document && document.activeElement) document.activeElement.blur();");
