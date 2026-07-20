@@ -40,8 +40,8 @@ public class CUnityPlayerActivity extends Activity implements IUnityPlayerLifecy
         getWindow().setFormat(2);
         mUnityPlayer = new CUnityPlayer(this, this);
         CUnityPlayerActivity.GlobalUnityActivity = this;
-        setContentView(mUnityPlayer.getView());
-        mUnityPlayer.getView().requestFocus();
+        setContentView(mUnityPlayer.getFrameLayout());
+        mUnityPlayer.getFrameLayout().requestFocus();
     }
 
     @Override protected void onNewIntent(Intent intent) {

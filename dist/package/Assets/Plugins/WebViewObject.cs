@@ -741,6 +741,10 @@ namespace Gree.UnityWebView
         private static extern void _gree_unity_webview_loadURL(string name, string url);
         [DllImport("__Internal")]
         private static extern void _gree_unity_webview_evaluateJS(string name, string js);
+        //MATIFIC SPECIFIC
+        [DllImport("__Internal")]
+        private static extern void _gree_unity_webview_postMessage(string name, string msg);
+        //END MATIFIC SPECIFIC
         [DllImport("__Internal")]
         private static extern void _gree_unity_webview_destroy(string name);
 #endif
@@ -1129,10 +1133,15 @@ namespace Gree.UnityWebView
                 bg.gameObject.SetActive(v);
             }
 #endif
+#if !UNITY_WEBGL
+            // WebGL: EvaluateJS uses contentWindow.eval(), which CSP (no unsafe-eval) blocks and throws.
+            // Not needed there anyway: setVisibility(false) hides the iframe via display:none, and
+            // browsers auto-blur the focused element inside an element that becomes non-rendered.
             if (GetVisibility() && !v)
             {
                 EvaluateJS("if (document && document.activeElement) document.activeElement.blur();");
             }
+#endif
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
             _gree_unity_webview_setVisibility(name, v);
@@ -1411,7 +1420,34 @@ namespace Gree.UnityWebView
             webView.Call("EvaluateJS", js);
 #endif
         }
-    
+
+        //MATIFIC SPECIFIC
+        public void PostMessage(string msg)
+        {
+#if UNITY_WEBGL
+#if !UNITY_EDITOR
+            _gree_unity_webview_postMessage(name, msg);
+#endif
+#elif UNITY_WEBPLAYER
+            Application.ExternalCall("unityWebView.postMessage", name, msg);
+#elif UNITY_EDITOR_LINUX || UNITY_SERVER
+            //TODO: UNSUPPORTED
+#elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            if (webView == IntPtr.Zero)
+                return;
+            _CWebViewPlugin_EvaluateJS(webView, msg);
+#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE
+            if (webView == IntPtr.Zero)
+                return;
+            _CWebViewPlugin_EvaluateJS(webView, msg);
+#elif UNITY_ANDROID
+            if (webView == null)
+                return;
+            webView.Call("EvaluateJS", msg);
+#endif
+        }
+        //END MATIFIC SPECIFIC
+
         public int Progress()
         {
 #if UNITY_WEBPLAYER || UNITY_WEBGL
