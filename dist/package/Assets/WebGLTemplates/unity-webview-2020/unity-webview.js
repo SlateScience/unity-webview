@@ -112,9 +112,23 @@ var unityWebView =
 
 };
 
-window.addEventListener(
-    'message',
-    function(event) {
-        unityWebView.sendMessage('WebViewObject', event.data);
-    },
-    false);
+window.addEventListener("message", function(event) {
+    switch (typeof event.data) {
+        case "string":
+        case "number":
+        case "boolean":
+            unityInstance.SendMessage(
+                "WebViewObject",
+                "CallFromJS",
+                String(event.data)
+            );
+            break;
+
+        default:
+            console.warn(
+                `Discarding unsupported postMessage type: ${typeof event.data}`,
+                event.data
+            );
+            break;
+    }
+}, false);
