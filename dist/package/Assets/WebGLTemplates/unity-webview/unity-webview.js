@@ -100,22 +100,20 @@ var unityWebView =
 };
 
 window.addEventListener("message", function(event) {
-    switch (typeof event.data) {
-        case "string":
-        case "number":
-        case "boolean":
-            unityInstance.SendMessage(
-                "WebViewObject",
-                "CallFromJS",
-                String(event.data)
-            );
-            break;
-
-        default:
-            console.warn(
-                `Discarding unsupported postMessage type: ${typeof event.data}`,
-                event.data
-            );
-            break;
+    if (!unityInstance) {
+        return;
+    }
+    var type = typeof event.data;
+    if (type !== "string" && type !== "number" && type !== "boolean") {
+        return;
+    }
+    try {
+        unityInstance.SendMessage(
+            "WebViewObject",
+            "CallFromJS",
+            String(event.data)
+        );
+    } catch (e) {
+        console.error("[WebView] Failed to relay message to Unity:", e);
     }
 }, false);
